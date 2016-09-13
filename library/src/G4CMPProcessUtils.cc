@@ -121,9 +121,18 @@ void G4CMPProcessUtils::LoadDataForTrack(const G4Track* track) {
   FindLattice(track->GetVolume());
 
   if (!theLattice) {
+    /*
     G4Exception("G4CMPProcessUtils::LoadDataForTrack", "Utils001",
 		EventMustBeAborted, ("No lattice found for volume"
 				     + track->GetVolume()->GetName()).c_str());
+    */
+    G4cerr << "G4CMPProcessUtils::LoadDataForTrack: No lattice found for volume."
+           << "Track must be killed."
+           << "\nParticle Name: " << track->GetDefinition()->GetParticleName()
+           << "\nPosition     : " << track->GetPosition()/m << " m"
+           << "\nMomentumDir  : " << track->GetMomentumDirection()
+           << "\nEnergy       : " << track->GetKineticEnergy()/eV << " eV"
+           << G4endl;
     return;	// No lattice, no special actions possible
   }
 
