@@ -882,6 +882,17 @@ G4CMPProcessUtils::CreateChargeCarrier(G4int charge, G4int valley,
 G4ThreeVector G4CMPProcessUtils::ValidateSecondaryPosition(const G4ThreeVector& pos) const {
   G4ThreeVector secPos(pos);
 
+  const G4Step* step = currentTrack->GetStep();
+  G4ThreeVector surfNorm;
+  if (step->GetPostStepPoint()->GetStepStatus() == fGeomBoundary) {
+    surfNorm = GetSurfaceNormal(*step);
+  } else {
+    G4ThreeVector p = fGlobalToLocal.TransformPoint(pos);
+    G4VPhysicalVolume* pVol = currentTrack->GetVolume();
+    surfNorm = pVol->GetLogicalVolume()->GetSolid()->SurfaceNormal(p);
+    RotateToGlobalDirection(surfNorm);
+  }
+
   // If the step is near a boundary, create the secondary in the initial volume
   G4Navigator* nav = G4TransportationManager::GetTransportationManager()->GetNavigatorForTracking();
   // Safety is the distance to a boundary
@@ -891,9 +902,7 @@ G4ThreeVector G4CMPProcessUtils::ValidateSecondaryPosition(const G4ThreeVector& 
   // If the distance to an edge is within error, we might accidentally get placed
   // in the next volume. Instead, let's scoot a bit away from the edge.
   if (safety <= kCarTolerance) {
-    G4ThreeVector norm = currentTrack->GetVolume()->GetLogicalVolume()->GetSolid()->SurfaceNormal(pos);
-    RotateToGlobalDirection(norm);
-    secPos = pos + (safety - kCarTolerance * (1.001)) * norm;
+    secPos = pos + (safety - kCarTolerance * (1.001)) * surfNorm;
   }
 
   return secPos;
